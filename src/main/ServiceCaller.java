@@ -123,11 +123,29 @@ public class ServiceCaller<Input, Output> {
       }
     };
 
+    Thread t3 = new Thread() {
+      @Override
+      public void run() {
+        try {
+          Service1Itf service1 = new Service1CodeGen();
+          long startTime = System.currentTimeMillis();
+          while (System.currentTimeMillis() - startTime < 60000) {
+            System.out.println(service1.call1(new Service1Call1Input()));
+            Thread.sleep(100);
+          }
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+    };
+
     t1.start();
     t2.start();
+    t3.start();
 
     t1.join();
     t2.join();
+    t3.join();
 
     System.out.println("done");
   }
