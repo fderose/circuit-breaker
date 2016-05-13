@@ -1,9 +1,9 @@
 # circuit-breaker
 A given service (Service1Itf, Service2Itf) can have multiple implementations. For each ServiceItf, I've added 3 implementations:
 
-a mock cache implementation,
-a mock web service implementation,
-a mock fallback implementation.
+1. a mock cache implementation,<br>
+2. a mock web service implementation,
+3. a mock fallback implementation.
 
 These implementations are in an ordered list that is associated with the ServiceItf (see ServiceCaller.implementationsByInterface).
 
