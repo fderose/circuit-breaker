@@ -9,12 +9,13 @@ public class Health {
   private static final Object object = new Object();
 
   private final Map<Exception, Long> exceptionCache = new HashMap<>();
+  private boolean healthy = true;
 
   public synchronized void incrementExceptionsForMethod(Exception exception) {
     exceptionCache.put(exception, System.currentTimeMillis());
   }
 
-  public boolean isMethodHealthy() {
+  public synchronized boolean isMethodHealthy() {
     Set<Exception> exceptionsToRemove = new HashSet<>();
     for (Exception e : exceptionCache.keySet()) {
       if (System.currentTimeMillis() - exceptionCache.get(e) > 10000) {
@@ -24,7 +25,14 @@ public class Health {
     for (Exception e : exceptionsToRemove) {
       exceptionCache.remove(e);
     }
-    return exceptionCache.size() < 5;
+    if (healthy) {
+      healthy = exceptionCache.size() < 5;
+    } else { // !healthy
+      if (exceptionCache.size() == 0) {
+        healthy = true;
+      }
+    }
+    return healthy;
   }
 
 }
