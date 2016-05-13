@@ -49,26 +49,37 @@ public class ServiceCaller<Input, Output> {
       Object instance = impl.newInstance();
       Method implMethod = impl.getMethod(method.getName(), input.getClass());
       Health health = getHealth(implMethod);
-      try {
-        if (health.isMethodHealthy()) {
-          return (Output) impl.getMethod(method.getName(), input.getClass()).invoke(instance, input);
+      boolean retry = true;
+      while (retry) {
+        System.out.println("----");
+        try {
+          if (health.isMethodHealthy()) {
+            return (Output) impl.getMethod(method.getName(), input.getClass()).invoke(instance, input);
+          } else {
+            System.out.println("Method " + impl.getName() + "." + method.getName() + " not healthy; skipping.");
+            retry = false;
+          }
+        } catch (Exception e) {
+          if (e.getCause() instanceof RetryableException) {
+            System.out.println(e.getCause().getMessage());
+          } else {
+            retry = false;
+            if (e.getCause() instanceof CacheMissException) {
+              System.out.println(e.getCause().getMessage());
+            } else {  // NonRetryableException
+              health.incrementExceptionsForMethod(e);
+              StringBuilder sb = new StringBuilder();
+              sb.append("Exception thrown: " + e.getClass().getName());
+              if (e.getMessage() != null) {
+                sb.append("\n" + e.getMessage());
+              }
+              if (e.getCause() != null) {
+                sb.append("\n" + e.getCause().getMessage());
+              }
+              System.out.println(sb.toString());
+            }
+          }
         }
-      } catch (Exception e) {
-        if (e.getCause() instanceof CacheMissException) {
-          System.out.println(e.getCause().getMessage());
-          continue;
-        }
-        health.incrementExceptionsForMethod(e);
-        StringBuilder sb = new StringBuilder();
-        sb.append("Exception thrown: " + e.getClass().getName());
-        if (e.getMessage() != null) {
-          sb.append("\n" + e.getMessage());
-        }
-        if (e.getCause() != null) {
-          sb.append("\n" + e.getCause().getMessage());
-          System.out.println();
-        }
-        System.out.println(sb.toString() + "\n");
       }
     }
     throw new Exception("Cannot obtain output");
@@ -131,7 +142,7 @@ public class ServiceCaller<Input, Output> {
           long startTime = System.currentTimeMillis();
           while (System.currentTimeMillis() - startTime < 60000) {
             System.out.println(service1.call1(new Service1Call1Input()));
-            Thread.sleep(100);
+            Thread.sleep(500);
           }
         } catch (Exception e) {
           e.printStackTrace();
@@ -140,12 +151,12 @@ public class ServiceCaller<Input, Output> {
     };
 
     t1.start();
-    t2.start();
-    t3.start();
+    //t2.start();
+    //t3.start();
 
     t1.join();
-    t2.join();
-    t3.join();
+    //t2.join();
+    //t3.join();
 
     System.out.println("done");
   }

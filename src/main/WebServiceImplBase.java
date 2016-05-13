@@ -1,12 +1,13 @@
 package main;
 
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public abstract class WebServiceImplBase extends ImplBase {
-  protected static boolean healthy = true;
-
-  protected static Timer timer = new Timer();
+  private static boolean healthy = true;
+  private static final Timer timer = new Timer();
+  private static final Random random = new Random();
 
   static {
     timer.schedule(new TimerTask() {
@@ -27,7 +28,12 @@ public abstract class WebServiceImplBase extends ImplBase {
 
   protected void maybeThrowException(String call) throws Exception {
     if (!healthy) {
-      throw new Exception("Exception thrown by " + this.getClass().getName() + call); // Simulate a failure.
+      throw new NonRetryableException("NonRetryableException thrown by " + this.getClass().getName() + call); // Simulate a non retryable failure.
     }
+
+    if ((Math.abs(random.nextInt()) % 100) > 90) {
+      throw new RetryableException("RetryableException thrown by " + this.getClass().getName() + call); // Simulate a retryable failure.
+    }
+
   }
 }
