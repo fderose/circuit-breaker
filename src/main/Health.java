@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class Health {
-  private static final Object object = new Object();
-
   private final Map<Exception, Long> exceptionCache = new HashMap<>();
   private boolean healthy = true;
 
